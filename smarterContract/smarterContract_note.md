@@ -1,8 +1,6 @@
-# Smarter Contract 
-## 简介
-将功能委托给当前最具成本效益的区块链，从而优化智能合约的性能
-## 跨链调用
-消息传递 + 目标链本地执行。因为不同链上的相同地址指向不同合约，所以不能直接用合约地址（合约实例）跨链调用
+# 跨链调用
+### 简介
+消息传递 + 目标链本地执行。因为不同链上的相同地址指向不同合约，所以不能直接用“接口+合约地址”（合约实例）跨链调用
 ## mailbox
 Mailbox 是 Hyperlane 在每个链上已经部署好的智能合约，可以发送/接收跨链信息（将消息发到另一条链的某个合约上）
 ```solidity
@@ -17,6 +15,10 @@ import {Call} from "./OwnableMulticall.sol";
 调用别的合约的结构体
 ## IInterchainQueryRouter
 跨链查询路由器，用于在不同的区块链之间执行查询操作并获取返回数据
+# Smarter contract
+## 简介
+源码里找不到对比逻辑只能学一些小语法点和一些跨链思路：跨链部署合约当跨链用户
+
 ## OwnableMulticall
 在目标链上创建该合约，作为用户的跨链账户
 
@@ -30,6 +32,8 @@ import {Call} from "./OwnableMulticall.sol";
 
 `bytes.concat(callbacks[i], returnData)`将()内的两个字节数组连接起来
 ## MockInterchainAccountRouter
+测试
+
 用户输入要调用的方法和目标链，然后帮用户在目标链调用
 
 合约作用：1.将:序列化后的"要调用"组、调用者、目标链ID打包并放到一个列表里2.计算某用户在某链将或已部署的合约（这里是用户的跨链账户）将出现在哪个地址，若没有则帮用户部署3.将前文列表里的"调用"数据拿出来批量调用
@@ -47,16 +51,17 @@ Call[] memory calls = abi.decode(pendingCall.serializedCalls, (Call[]));
 ```
 将``pendingCall.serializedCalls``(序列化后的字节数组)解码成``Call[]``
 
-import接口后还需要合约地址才能调用接口的函数
+import接口后需要合约地址然后将地址实例化才能调用接口的函数
 ## Owner
 调IInterchainAccountRouter函数：1.设置远程链上合约的手续费2.更改远程链上合约的所有权
 ```solidity
 Call({
             to: target,
-            data: abi.encodeWithSelector(0x69fe0e2d, newFee)
-        });
+            data: abi.encodeWithSelector
+            (0x69fe0e2d, newFee)
+    });
 ```
-target: 目标链上的合约地址,0x69fe0e2d是目标函数签名，newFee是参数
+target: 目标链上的合约地址,0x69fe0e2d是目标函数签名，newFee是参数，然后打包放在某个结构体里
 ## OwnerReader
 调IInterchainQueryRouter的函数查询别的链的信息
 
@@ -67,9 +72,6 @@ Ownable.owner.selector
 获取ownable合约中owner函数的选择器编码，用于函数调用
 
 
-
-
-//三个跨链通信合约鬼用没有
 
 
 
