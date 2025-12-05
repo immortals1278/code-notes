@@ -20,3 +20,27 @@ constructor{
 }
 ```
 Solidity 中继承合约构造函数的初始化方式,如`ERC20(name_, symbol_)`调用 ERC20 父合约的构造函数，传入 name_ 和 symbol_ 参数来初始化代币名称和符号
+
+## 部署在本地网
+### 如何在wsl里使用vpn
+在wsl里：ipconfig，找到两个本地配置下的第一段里的ipV4，替换到
+```
+export http_proxy=http://10.253.62.130:7890
+export https_proxy=http://10.253.62.130:7890
+export ALL_PROXY=socks5://10.253.62.130:7891
+```
+然后直接执行：（是不是直接执行这个就行？？？？？）
+```
+export http_proxy=http://10.253.62.130:7890
+export https_proxy=http://10.253.62.130:7890
+export ALL_PROXY=socks5://10.253.62.130:7891
+```
+然后查询当前wsl的ip是不是vpn的ip：(这些命令任意都可以)
+```
+curl ifconfig.me
+curl ip.sb
+curl ipapi.co/json
+curl https://api.ipify.org
+curl https://ifconfig.co/json
+```
+然后就可以下载很多东西了（下载指令看官方文档不要看ai，ai老乱说）
