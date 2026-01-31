@@ -1,10 +1,5 @@
 新建一个文件夹，然后对着空文件夹forge init（vscode就有终端）
-## src
-里面写源码，开头定义开源协议和编译器版本
 
-实现一个合约前先创建该合约的接口：抽象函数，事件，报错
-
-然后让合约实现该接口。实现时安装（用终端）并导入相关库（接口不需要）wizard.openzeppelin.com
 
 安装完相关库要在toml里配置
 ```solidity
@@ -44,3 +39,4 @@ curl https://api.ipify.org
 curl https://ifconfig.co/json
 ```
 然后就可以下载很多东西了（下载指令看官方文档不要看ai，ai老乱说）
+
