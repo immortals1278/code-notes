@@ -46,10 +46,17 @@ go func(){
 
 协程的数量远大于线程的数量
 
-`GMP`:协程，线程，线程执行的环境。一个M绑定一个P，P维护一个全局列表，列表里面存储了很多runnable的协程。G运行在M里
+`GMP`:协程，线程，线程执行的环境。一个M绑定一个P，P维护一个全局列表，列表里面存储了很多runnable的G。G运行在M里
 
-1.谁来阻塞协程：运行时调度器将调`gopark()`，被阻塞的G放在channel里（hchan的等待队列recvq里）
+1.谁来阻塞协程：运行时**调度器**将调`gopark()`，被阻塞的G放在channel里（hchan的等待队列recvq里）
 
-2.过程：在P里挑一个runnable的G，调度器将它与M关系绑定开始执行
+2.过程：**调度器**在P里挑一个runnable的G，调度器将它与M关系绑定开始执行
 
 3.阻塞后唤醒：调度器执行`goready()`，把唤醒的G放回P里
+## closed channel
+### goroutine往closed channel里写数据
+panic
+### goroutine往closed channel里读数据
+不panic，返回buffer里的值
+
+**defer**：延迟到函数返回前执行
