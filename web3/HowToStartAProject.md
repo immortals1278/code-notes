@@ -24,7 +24,7 @@ export http_proxy=http://10.253.62.130:7890
 export https_proxy=http://10.253.62.130:7890
 export ALL_PROXY=socks5://10.253.62.130:7891
 ```
-然后直接执行：（是不是直接执行这个就行？？？？？）
+然后直接执行：
 ```
 export http_proxy=http://10.253.62.130:7890
 export https_proxy=http://10.253.62.130:7890
