@@ -30,3 +30,36 @@ Code int         `json:"code"`  //状态码，0表示成功，非0表示失败�
 Msg  string      `json:"msg"`   //错误信息
 Data interface{} `json:"data,omitempty"`
 ```
+
+### 其他
+`http.ListenAndServe(":8080", nil)`启动 HTTP 服务器，监听 **8080 端口**，使用默认路由（需预先注册）。
+
+`"root:123456@tcp(127.0.0.1:3306)/exchangeengine"`指定 **TCP 连接**，数据库地址为本地 `127.0.0.1`，端口 `3306`（MySQL 默认）。
+
+```golang
+type Response struct {
+	Code int         `json:"code"`//指定 JSON 序列化/反序列化时的字段映射：
+	Data interface{} `json:"data,omitempty"` //如果 Data 为空值，JSON 中省略该字段
+}
+```
+
+前端代码在浏览器运行，浏览器转发给后端
+```golang
+w.Header().Set("Content-Type", "application/json")               // 设置响应格式为JSON
+w.Header().Set("Access-Control-Allow-Origin", "*")              // *表示允许所有域名跨域访问,所有网站都能调用该api
+w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS") // 允许的HTTP方法
+w.Header().Set("Access-Control-Allow-Headers", "Content-Type")  // 允许的请求头，前端发送 JSON 时必须带这个头，不设置会被浏览器拦截。
+```
+
+浏览器发送跨域请求前，会先发送一个 **OPTIONS 预检请求**（不带业务数据），询问后端是否允许实际请求。
+后端收到 OPTIONS 后：
+- `w.WriteHeader(http.StatusOK)` → 返回 200 状态码表示"允许"
+- `return` → 立即结束，不处理后续业务逻辑
+
+这样浏览器收到 200 后，才会继续发送真实的 GET/POST 请求。
+```golang
+if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+```
