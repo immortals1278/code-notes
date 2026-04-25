@@ -22,3 +22,14 @@ GameFi 用 ERC1155
 更建议：
 主攻后端 / 前端 + 补智能合约能力
 这样就业面最大。
+
+## 4.23
+不是“随便翻”。
+
+必须带着业务问题看。
+
+## 4.25阅读顺序
+gateway
+→ order-service
+→ matching-engine
+→ market-data-service
