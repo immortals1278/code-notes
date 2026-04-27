@@ -1,7 +1,42 @@
 ## gateway
 将环境变量中不同功能的本地url，解析成对应的url.URL结构体指针，生成对应的反向代理。
 设置好gin引擎，与反向代理连接
-看到srv
+
+TODO: 两个函数，整个gateway的梳理
+
+看channel
+
+## http.Server
+该种结构体封装了监听、连接、协议、TLS 等复杂逻辑
+```golang
+srv := &http.Server{
+		Addr:              fmt.Sprintf(":%s", port), //将 port 变量格式化，赋值给 Addr。
+		Handler:           r, //设置所有进入 http.Server 的请求，都交给这个 gin 引擎来处理
+		ReadHeaderTimeout: 5 * time.Second, //超过5秒终止连接
+	}
+```
+
+## 异步部分
+异步在启动时打印完整配置，便于运维确认，失败时立即记录错误并退出，避免半运行状态
+
+## 关闭程序部分
+`quit := make(chan os.Signal, 1)` 创建一个容量为 1 的、用于接收操作系统信号的 channel
+
+`signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)` 将指定的操作系统信号（SIGINT、SIGTERM）转发到 channel quit 中
+
+```golang
+sig := <-quit  // 捕获信号，只有在quit收到信号时执行，否则整个程序一直卡在这里
+logger.Log.Info("gateway 收到關閉訊號", zap.String("signal", sig.String()))  //quit收到信号后打印日志
+
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //创建一个5秒后自动取消的控制器
+defer cancel() //函数结束时释放资源（向操作系统借的资源）
+if err := srv.Shutdown(ctx); err != nil { // Shutdown() 停止接收请求并等到请求完成后关闭，5秒内没执行完报错，强制关闭
+// 失败成功分别打印日志
+	logger.Log.Error("gateway 關閉失敗", zap.Error(err))
+	return
+}
+logger.Log.Info("gateway 已完成關閉")
+```
 
 ## gin
 Gin 框架中用于将 HTTP 请求映射到处理函数的组件
@@ -71,6 +106,11 @@ func newReverseProxy(targetURL *url.URL) *httputil.ReverseProxy {
 每个文件夹下都是main.go。每个 main.go 都是一个独立微服务的可执行程序入口，用于启动该服务。
 
 ## golang
+
+`func() { 逻辑 }()` 匿名函数，函数体后的()表示调用
+
+`go`：启动一个新的并发执行的goroutine的关键字
+
 `defer logger.Sync()`
 logger.Sync() 会刷新日志缓冲区，把还没写入文件的日志条目强制写入磁盘
 defer 保证在函数返回（程序退出）时执行这行代码 
@@ -86,7 +126,7 @@ infraredis 是当前项目内部包的别名
 DefaultConfig() 是该包提供的一个函数，返回一个预填充了默认值的配置结构体，这样只修改需要变更的字段，其他保持默认
 import时声明了infraredis是哪个内部包的别名
 
-`parsed, err := strconv.Atoi(val)`将字符串转化为整数类型
+`parsed, err := strconv.Atoi(val)`将字符串转化为整数类型/
 
 `time.Second`时间间隔常量，表示1秒
 
