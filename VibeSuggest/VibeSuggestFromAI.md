@@ -33,3 +33,6 @@ gateway
 → order-service
 → matching-engine
 → market-data-service
+
+## 4.28
+逐字阅读的能力很重要

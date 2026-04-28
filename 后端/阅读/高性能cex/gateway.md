@@ -1,10 +1,7 @@
 ## gateway
 将环境变量中不同功能的本地url，解析成对应的url.URL结构体指针，生成对应的反向代理。
-设置好gin引擎，与反向代理连接
-
-TODO: 两个函数，整个gateway的梳理
-
-看channel
+设置好gin引擎，与反向代理连接。将gin引擎放入http.Server中。异步打印配置处理失败。
+完成关闭gateway的流程
 
 ## http.Server
 该种结构体封装了监听、连接、协议、TLS 等复杂逻辑
@@ -30,7 +27,7 @@ logger.Log.Info("gateway 收到關閉訊號", zap.String("signal", sig.String())
 
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //创建一个5秒后自动取消的控制器
 defer cancel() //函数结束时释放资源（向操作系统借的资源）
-if err := srv.Shutdown(ctx); err != nil { // Shutdown() 停止接收请求并等到请求完成后关闭，5秒内没执行完报错，强制关闭
+if err := srv.Shutdown(ctx); err != nil { // Shutdown()：停止接收请求并等到请求完成后关闭，5秒内没执行完报错，强制关闭
 // 失败成功分别打印日志
 	logger.Log.Error("gateway 關閉失敗", zap.Error(err))
 	return
@@ -103,9 +100,13 @@ func newReverseProxy(targetURL *url.URL) *httputil.ReverseProxy {
 }
 ```
 ## 微服务架构的标准目录结构
+微服务模式：把一个大型应用拆成一组小服务，每个服务：独立运行、独立部署、有自己的数据库。
+
 每个文件夹下都是main.go。每个 main.go 都是一个独立微服务的可执行程序入口，用于启动该服务。
 
 ## golang
+
+`context` 用来设置控制器（上下文对象）
 
 `func() { 逻辑 }()` 匿名函数，函数体后的()表示调用
 
