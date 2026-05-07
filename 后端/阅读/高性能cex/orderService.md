@@ -1,11 +1,11 @@
 ## orderService
 
-TODO：看db 逻辑，repository 逻辑，domain 逻辑，kafka 逻辑
+TODO：看db 逻辑，repository 逻辑，domain 逻辑，
 
 ## 数据库
 数据库连接url写在环境变量中
 
-db是个要自己写的包
+初始化数据库池
 ```golang
 dbCfg := db.DefaultDBConfig(dbURL) // 创建一个默认配置的 数据库配置 。
 
@@ -29,6 +29,7 @@ defer pool.Close() // 在 main() 返回前关闭池
 `repo := repository.NewPostgresRepository(pool)` 把 pool 实例放进去创建一个 repo 实例，不知道有什么用
 
 ## redis
+初始化redis
 ```golang
 redisCfg := redis.DefaultConfig() // 创建 redis 默认配置
 
@@ -52,7 +53,11 @@ if redisClient != nil {
 ## kafka
 订单事件必须通过他发布给其他服务
 
+初始化kafka
 
+kafka用于微服务之间传递消息
+
+`topic` 消息主题
 ```golang
 kafkaCfg := kafka.DefaultConfig() // 创建默认 kafka 配置
 
@@ -74,6 +79,7 @@ if err != nil {
 eventBus := domain.EventPublisher(kafkaProducer)
 logger.Log.Info("Kafka Producer 已連線")
 ```
+
 
 ## golang
 `defer logger.Sync()` 确保在程序退出前将所有日志写入磁盘

@@ -1,6 +1,10 @@
 ## gateway
 将环境变量中不同功能的本地url，解析成对应的url.URL结构体指针，生成对应的反向代理。
-设置好gin引擎，与反向代理连接。将gin引擎放入http.Server中。异步打印配置处理失败。
+设置好gin引擎(设置中间件)，与反向代理连接。
+
+初始化redis客户端，设置（公共/私有）访问速率
+
+将gin引擎放入http.Server中。异步打印配置处理失败。
 完成关闭gateway的流程
 
 ## http.Server
@@ -99,36 +103,42 @@ func newReverseProxy(targetURL *url.URL) *httputil.ReverseProxy {
 	return proxy
 }
 ```
-## 微服务架构的标准目录结构
+## 微服务架构
 微服务模式：把一个大型应用拆成一组小服务，每个服务：独立运行、独立部署、有自己的数据库。
 
-每个文件夹下都是main.go。每个 main.go 都是一个独立微服务的可执行程序入口，用于启动该服务。
+每个文件夹下都是main.go。每个go包（每个服务）都是main包。每个 main.go 都是一个独立微服务的可执行程序入口，用于启动该服务。
 
 ## golang
-
 `context` 用来设置控制器（上下文对象）
 
 `func() { 逻辑 }()` 匿名函数，函数体后的()表示调用
 
 `go`：启动一个新的并发执行的goroutine的关键字
 
+`logger, _ := zap.NewProduction() // 默认输出到终端 `
 `defer logger.Sync()`
 logger.Sync() 会刷新日志缓冲区，把还没写入文件的日志条目强制写入磁盘
 defer 保证在函数返回（程序退出）时执行这行代码 
 
 `port := os.Getenv("GATEWAY_PORT")`
 os.Getenv() 是 Go 标准库函数，用于读取操作系统环境变量
-"GATEWAY_PORT" 是环境变量名，需要在启动程序前设置好.在该项目中若没配置则用8100作为默认端口
+环境变量的设置取决运行环境：
+- 本地运行：在运行的终端临时设置
 
 `orderTargetURL, err := url.Parse(orderServiceURL)`url.Parse() 是 Go 标准库 net/url 包提供的函数，用于解析 URL 字符串.解析成功后返回 *url.URL 结构体指针
+
+`parsed, err := strconv.Atoi(val)`将字符串转化为整数类型
+
+`time.Second`时间间隔常量，表示1秒
+
+` { } `定义一个代码块， { } 里的变量外面访问不到
 
 `redisCfg := infraredis.DefaultConfig()`
 infraredis 是当前项目内部包的别名
 DefaultConfig() 是该包提供的一个函数，返回一个预填充了默认值的配置结构体，这样只修改需要变更的字段，其他保持默认
 import时声明了infraredis是哪个内部包的别名
 
-`parsed, err := strconv.Atoi(val)`将字符串转化为整数类型/
+## redis
+这个微服务需要通过redis客户端使用redis
 
-`time.Second`时间间隔常量，表示1秒
-
-` { } `定义一个代码块， { } 里的变量外面访问不到
+`idempStore = middleware.NewRedisIdempotencyStore(redisClient)`创建幂等性存储，当相同请求再次到达时，直接返回已存储的结果
