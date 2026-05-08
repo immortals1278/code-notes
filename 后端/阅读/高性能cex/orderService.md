@@ -1,6 +1,7 @@
 ## orderService
-
+初始化数据库，redis，kafka，outbox
 TODO：看db 逻辑，repository 逻辑，domain 逻辑，
+到svc
 
 ## 数据库
 数据库连接url写在环境变量中
@@ -51,11 +52,9 @@ if redisClient != nil {
 ```
 
 ## kafka
-订单事件必须通过他发布给其他服务
-
-初始化kafka
-
 kafka用于微服务之间传递消息
+
+订单事件必须通过他发布给其他服务
 
 `topic` 消息主题
 ```golang
@@ -77,11 +76,20 @@ if err != nil {
 	logger.Log.Fatal("order-service: Kafka 連線失敗，純微服務模式無法啟動", zap.Error(err))
 }
 eventBus := domain.EventPublisher(kafkaProducer)
-logger.Log.Info("Kafka Producer 已連線")
 ```
 
+## Outbox Pattern
+满足数据库操作与发送消息需要原子性的需求：避免发送了信息没更新数据库，导致数据不一致
+
+原理：发送事件也变成一次数据库操作，操作“发送表”。一个goroutine不断轮询“发送表”并执行对应操作。
+
+`outboxCtx, cancelOutbox := context.WithCancel(context.Background())`
+- `context.WithCancel()`：基于父 Context 创建一个可以手动取消的子 Context
+- `outboxCtx`：返回的可取消 Context，用于传递给需要受控的 goroutine
+- `cancelOutbox`：取消函数，调用后会通知所有使用 outboxCtx 的 goroutine 停止工作
 
 ## golang
 `defer logger.Sync()` 确保在程序退出前将所有日志写入磁盘
 
 `strings.ToLower(resetOffset)`：转换为小写，避免大小写不一致
+

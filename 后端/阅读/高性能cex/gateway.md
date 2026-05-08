@@ -4,18 +4,22 @@
 
 初始化redis客户端，设置（公共/私有）访问速率
 
-将gin引擎放入http.Server中。异步打印配置处理失败。
+设置http.Server：放入gin引擎，监听gateway的端口，设置超时限制
+
+异步打印配置处理失败。
 完成关闭gateway的流程
 
 ## http.Server
 该种结构体封装了监听、连接、协议、TLS 等复杂逻辑
 ```golang
 srv := &http.Server{
-		Addr:              fmt.Sprintf(":%s", port), //将 port 变量格式化，赋值给 Addr。
+		Addr:              fmt.Sprintf(":%s", port), //告诉 HTTP 服务器“在哪个端口上等待客户端连接”。
 		Handler:           r, //设置所有进入 http.Server 的请求，都交给这个 gin 引擎来处理
 		ReadHeaderTimeout: 5 * time.Second, //超过5秒终止连接
 	}
 ```
+
+http.Server监听网关，所有请求都发往网关，网关再根据路径不同转发到对应的微服务
 
 ## 异步部分
 异步在启动时打印完整配置，便于运维确认，失败时立即记录错误并退出，避免半运行状态
@@ -107,6 +111,8 @@ func newReverseProxy(targetURL *url.URL) *httputil.ReverseProxy {
 微服务模式：把一个大型应用拆成一组小服务，每个服务：独立运行、独立部署、有自己的数据库。
 
 每个文件夹下都是main.go。每个go包（每个服务）都是main包。每个 main.go 都是一个独立微服务的可执行程序入口，用于启动该服务。
+
+一个目录下如果有一个main.go,所有go文件都写main包。
 
 ## golang
 `context` 用来设置控制器（上下文对象）
