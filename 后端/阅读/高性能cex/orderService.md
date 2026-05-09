@@ -1,7 +1,17 @@
 ## orderService
-初始化数据库，redis，kafka，outbox
-TODO：看db 逻辑，repository 逻辑，domain 逻辑，
-到svc
+初始化db，redis，kafka，outbox
+
+创建一个订单服务实例
+
+启动kafka consumer(每个微服务都要有)
+
+设置gin，为业务的核心功能注册路由，启动http server
+
+优雅关闭
+
+TODO：看核心业务逻辑
+db ，repository ，domain ，outbox
+
 
 ## 数据库
 数据库连接url写在环境变量中
@@ -56,6 +66,8 @@ kafka用于微服务之间传递消息
 
 订单事件必须通过他发布给其他服务
 
+kafka的consumer用来接受消息，producer用来发消息（放在outbox里）
+
 `topic` 消息主题
 ```golang
 kafkaCfg := kafka.DefaultConfig() // 创建默认 kafka 配置
@@ -76,6 +88,20 @@ if err != nil {
 	logger.Log.Fatal("order-service: Kafka 連線失敗，純微服務模式無法啟動", zap.Error(err))
 }
 eventBus := domain.EventPublisher(kafkaProducer)
+```‘
+启动kafka消费者
+```golang
+eventSubscriber := order.NewEventSubscriber(repo, repo, repo, repo, kafkaProducer)
+
+consumerCtx, cancelConsumers := context.WithCancel(context.Background())
+defer cancelConsumers()
+
+settleConsumer, err := kafka.NewConsumer(kafkaCfg, "order-service", []string{domain.TopicSettlements})
+if err != nil {
+	logger.Log.Fatal("order-service: 建立結算 consumer 失敗", zap.Error(err))
+}
+settleConsumer.Start(consumerCtx, eventSubscriber.HandleEvents)
+logger.Log.Info("Kafka settlement consumer 已啟動", zap.String("topic", domain.TopicSettlements))```
 ```
 
 ## Outbox Pattern
@@ -88,8 +114,45 @@ eventBus := domain.EventPublisher(kafkaProducer)
 - `outboxCtx`：返回的可取消 Context，用于传递给需要受控的 goroutine
 - `cancelOutbox`：取消函数，调用后会通知所有使用 outboxCtx 的 goroutine 停止工作
 
+## 业务逻辑
+为业务的核心功能注册路由
+```golang
+handler := api.NewHandler(svc, nil)
+v1 := r.Group("/api/v1")
+handler.RegisterRoutes(v1)
+```
+业务逻辑在：业务逻辑位置 ：在 internal/api （HTTP层）和 internal/order （业务层）包中
+
+## 优雅关闭
+优雅关闭kafka consumer
+```golang
+cancelConsumers()
+cancelOutbox()
+shutdownDone := make(chan struct{})
+go func() {
+	if settleConsumer != nil { //如果是nil就不用关闭
+		settleConsumer.Wait() // 等待直到消费者完成所有消息处理
+	}
+	close(shutdownDone) // 关闭chan，接收方立即受到该chan的0值
+}()
+select {
+case <-shutdownDone:
+	logger.Info("Kafka consumers 已完整關閉")
+case <-time.After(10 * time.Second): // 10s没关闭强制关闭
+	logger.Warn("Kafka consumer 等待超時，強制繼續關機")
+}
+```
+直接关闭kafka producer
+优雅关闭http server
+略
+
+
 ## golang
 `defer logger.Sync()` 确保在程序退出前将所有日志写入磁盘
 
 `strings.ToLower(resetOffset)`：转换为小写，避免大小写不一致
+
+`url := ginSwagger.URL("/docs/architecture/swagger.yaml")`告诉gin-swagger去哪里加载api配置文件
+
+`<-quit`阻塞等待，直到收到信号
 

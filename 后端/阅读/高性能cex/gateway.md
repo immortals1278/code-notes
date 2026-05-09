@@ -11,6 +11,10 @@
 
 ## http.Server
 该种结构体封装了监听、连接、协议、TLS 等复杂逻辑
+
+http.Server监听网关，所有请求都发往网关，网关再根据路径不同转发到对应的微服务
+
+创建
 ```golang
 srv := &http.Server{
 		Addr:              fmt.Sprintf(":%s", port), //告诉 HTTP 服务器“在哪个端口上等待客户端连接”。
@@ -18,8 +22,18 @@ srv := &http.Server{
 		ReadHeaderTimeout: 5 * time.Second, //超过5秒终止连接
 	}
 ```
-
-http.Server监听网关，所有请求都发往网关，网关再根据路径不同转发到对应的微服务
+启动
+```golang
+	go func() {
+		logger.Log.Info(
+			//成功启动，打印相关日志
+		)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Log.Fatal("gateway 啟動失敗", zap.Error(err))
+		}
+	}()
+```
+`srv.ListenAndServe()`启动服务器
 
 ## 异步部分
 异步在启动时打印完整配置，便于运维确认，失败时立即记录错误并退出，避免半运行状态
@@ -34,7 +48,7 @@ sig := <-quit  // 捕获信号，只有在quit收到信号时执行，否则整�
 logger.Log.Info("gateway 收到關閉訊號", zap.String("signal", sig.String()))  //quit收到信号后打印日志
 
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) //创建一个5秒后自动取消的控制器
-defer cancel() //函数结束时释放资源（向操作系统借的资源）
+defer cancel() //函数结束时释放ctx资源（向操作系统借的资源）
 if err := srv.Shutdown(ctx); err != nil { // Shutdown()：停止接收请求并等到请求完成后关闭，5秒内没执行完报错，强制关闭
 // 失败成功分别打印日志
 	logger.Log.Error("gateway 關閉失敗", zap.Error(err))
