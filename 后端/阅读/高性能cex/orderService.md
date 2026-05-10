@@ -5,11 +5,10 @@
 
 启动kafka consumer(每个微服务都要有)
 
-设置gin，为业务的核心功能注册路由，启动http server
+设置gin，为业务的核心功能（internal/order）注册路由，启动http server
 
 优雅关闭
 
-TODO：看核心业务逻辑
 db ，repository ，domain ，outbox
 
 
@@ -119,9 +118,19 @@ logger.Log.Info("Kafka settlement consumer 已啟動", zap.String("topic", domai
 ```golang
 handler := api.NewHandler(svc, nil)
 v1 := r.Group("/api/v1")
-handler.RegisterRoutes(v1)
+handler.RegisterRoutes(v1) // 设置各种功能的路由
 ```
-业务逻辑在：业务逻辑位置 ：在 internal/api （HTTP层）和 internal/order （业务层）包中
+所有发到当前微服务 /api/v1 路径的请求，都会通过 handler 注册的路由，最终调用 svc（order包的实例） 中的业务逻辑代码。
+
+api包调用order包中的核心业务逻辑
+
+`NewHandler()`返回一个结构体：order svc和market-data svc，两个微服务都可以用。分别用的（创建）时候不用的svc输入nil
+
+**路由**
+```golang
+r.POST("/orders", h.CreateOrder)
+//  └─路由规则─┘   └─处理器─┘
+```
 
 ## 优雅关闭
 优雅关闭kafka consumer
