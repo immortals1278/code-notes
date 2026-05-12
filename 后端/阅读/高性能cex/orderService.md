@@ -61,7 +61,7 @@ if redisClient != nil {
 ```
 
 ## kafka
-kafka用于微服务之间传递消息
+持久化的消息队列系统，用于微服务之间传递消息
 
 订单事件必须通过他发布给其他服务
 
@@ -113,7 +113,7 @@ logger.Log.Info("Kafka settlement consumer 已啟動", zap.String("topic", domai
 - `outboxCtx`：返回的可取消 Context，用于传递给需要受控的 goroutine
 - `cancelOutbox`：取消函数，调用后会通知所有使用 outboxCtx 的 goroutine 停止工作
 
-## 业务逻辑
+## api和业务逻辑
 为业务的核心功能注册路由
 ```golang
 handler := api.NewHandler(svc, nil)
@@ -122,9 +122,8 @@ handler.RegisterRoutes(v1) // 设置各种功能的路由
 ```
 所有发到当前微服务 /api/v1 路径的请求，都会通过 handler 注册的路由，最终调用 svc（order包的实例） 中的业务逻辑代码。
 
-api包调用order包中的核心业务逻辑
+handler（api包）调用order包中的核心业务逻辑
 
-`NewHandler()`返回一个结构体：order svc和market-data svc，两个微服务都可以用。分别用的（创建）时候不用的svc输入nil
 
 **路由**
 ```golang
