@@ -36,7 +36,9 @@ defer pool.Close() // 在 main() 返回前关闭池
 **连接池**：预先创建的一批连接，反复使用，用完不销毁，放回池中
 
 ## repository
-`repo := repository.NewPostgresRepository(pool)` 把 pool 实例放进去创建一个 repo 实例，不知道有什么用
+`repo := repository.NewPostgresRepository(pool)` 把 pool 实例放进去创建一个 repo 实例
+
+封装了操作数据库的方法
 
 ## redis
 初始化redis
@@ -87,7 +89,7 @@ if err != nil {
 	logger.Log.Fatal("order-service: Kafka 連線失敗，純微服務模式無法啟動", zap.Error(err))
 }
 eventBus := domain.EventPublisher(kafkaProducer)
-```‘
+```
 启动kafka消费者
 ```golang
 eventSubscriber := order.NewEventSubscriber(repo, repo, repo, repo, kafkaProducer)
@@ -113,7 +115,26 @@ logger.Log.Info("Kafka settlement consumer 已啟動", zap.String("topic", domai
 - `outboxCtx`：返回的可取消 Context，用于传递给需要受控的 goroutine
 - `cancelOutbox`：取消函数，调用后会通知所有使用 outboxCtx 的 goroutine 停止工作
 
+```golang
+	outboxCtx, cancelOutbox := context.WithCancel(context.Background())
+	outboxRepo := outbox.NewRepository(pool)
+	worker := outbox.NewWorker(outboxRepo, kafkaProducer, 10*time.Second, 100)
+	go worker.Start(outboxCtx) // 后台 goroutine 定期轮询 outbox 消息表，把未发送的消息发给 Kafka。
+```
+
 ## api和业务逻辑
+### order svc
+```golang
+	svc := order.NewService(
+		repo, repo, repo, repo, repo, // 都用同一个仓库，只是根据名字不同区分功能
+		cacheRepo,
+		eventBus,
+		kafkaProducer, // rawPublisher: 熱路徑直發 Kafka 用
+		outboxRepo, //底层用的和上面是同一个pool
+	)
+```
+
+
 为业务的核心功能注册路由
 ```golang
 handler := api.NewHandler(svc, nil)
