@@ -41,6 +41,7 @@ defer pool.Close() // 在 main() 返回前关闭池
 封装了操作数据库的方法
 
 ## redis
+放到 order svc 里面用
 初始化redis
 ```golang
 redisCfg := redis.DefaultConfig() // 创建 redis 默认配置
