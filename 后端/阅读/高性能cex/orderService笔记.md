@@ -122,7 +122,18 @@ logger.Log.Info("Kafka settlement consumer 已啟動", zap.String("topic", domai
 	worker := outbox.NewWorker(outboxRepo, kafkaProducer, 10*time.Second, 100)
 	go worker.Start(outboxCtx) // 后台 goroutine 定期轮询 outbox 消息表，把未发送的消息发给 Kafka。
 ```
-
+## 注册路由
+### 开始监听指定端口
+```golang
+	srv := &http.Server{Addr: ":" + port, Handler: r}
+	go func() {// 后台开一个goroutine开始监听该端口
+		logger.Info("order-service 已啟動", zap.String("port", ":"+port))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Error("order-service 啟動失敗", zap.Error(err))
+		}
+	}()
+```
+`err := srv.ListenAndServe()`开始监听指定端口
 ## api和业务逻辑
 ### order svc
 ```golang
