@@ -67,7 +67,7 @@ Gin 框架中用于将 HTTP 请求映射到处理函数的组件
 - `r.Use(metrics.Middleware("gateway"))`  监控指标中间件，记录网关运行数据
 - `r.Use(cors.New(cors.Config{ 这里 }))`cors中间件:规定允许的http方法，请求头，域名...
 
-`r.GET()`Gin 框架中注册 HTTP GET 路由的方法。当客户端发送 GET 请求到指定路径时，执行对应的处理函数。
+`r.GET()`Gin 框架中注册 HTTP GET 路由的方法。当客户端发送 GET 请求到指定路径时，**执行对应的处理函数。**
 - `r.GET("/metrics", gin.WrapH(metrics.Handler()))`访问/metrics时，输出指标数据(网关工作中的统计数据) ，函数wrapH()成gin认得的形式
 - `r.GET("/health", func(c *gin.Context){c.JSON(http.StatusOK, gin.H{  }) })`用来证明网关健康
   - c：*gin.Context，当前请求的**上下文对象**，包含了请求/响应的所有信息
@@ -76,14 +76,15 @@ Gin 框架中用于将 HTTP 请求映射到处理函数的组件
   - gin.H{}：一个对象，里面可以放很多键值对，用来放很多信息
 
 `r.Any()`注册一个路由响应所有http方法
-- `r.Any("/ws", gin.WrapH(marketProxy))`所有发往 /ws 的请求转发给 marketProxy 反向代理。将标准 http.Handler wrapH() 成 Gin 的处理函数
+- `r.Any("/ws", gin.WrapH(marketProxy))`所有发往 /ws 的请求转发给 marketProxy 反向代理。将标准http.Handler对象 wrapH() 成 Gin 的处理函数
 
 `apiGroup := r.Group("/api/v1")`创建一个路由分组，所有以 /api/v1 开头的路由都属于这个分组
 `public.Use(middleware.RateLimitMiddleware(publicLimiter))`该分组下所有路由都会被限流(比如每秒100次)
 `orders.Use(middleware.IdempotencyMiddleware(idempStore, 24*time.Hour))` 幂等性中间件：确保同一个请求多次发送，只会被执行一次(同一个 Key 24 小时内只能请求 1 次,不区分用户)
 
 `r.NoRoute(gin.WrapH(orderProxy))`当请求的路径没有任何匹配的路由时，转发给 orderProxy
-
+## context
+gin收到前端的请求后在服务端创建的，包含前端请求数据（header,body）,服务端响应工具
 ## 反向代理
 把客户端请求转发给后端服务器处理，然后把结果返回给客户端。
 
