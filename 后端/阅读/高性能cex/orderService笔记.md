@@ -107,7 +107,7 @@ logger.Log.Info("Kafka settlement consumer 已啟動", zap.String("topic", domai
 ```
 
 ## Outbox Pattern
-满足数据库操作与发送消息需要原子性的需求：避免发送了信息没更新数据库，导致数据不一致
+满足数据库操作与发送消息需要原子性的需求：避免**发送了信息没更新数据库，导致数据不一致**
 
 原理：发送事件也变成一次数据库操作，操作“发送表”。一个goroutine不断轮询“发送表”并执行对应操作。
 
@@ -116,6 +116,7 @@ logger.Log.Info("Kafka settlement consumer 已啟動", zap.String("topic", domai
 - `outboxCtx`：返回的可取消 Context，用于传递给需要受控的 goroutine
 - `cancelOutbox`：取消函数，调用后会通知所有使用 outboxCtx 的 goroutine 停止工作
 
+创建：需要kafkaProducer和db连接池（跟上面用同一个）
 ```golang
 	outboxCtx, cancelOutbox := context.WithCancel(context.Background())
 	outboxRepo := outbox.NewRepository(pool)
